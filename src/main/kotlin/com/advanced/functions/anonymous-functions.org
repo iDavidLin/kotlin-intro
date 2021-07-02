@@ -1,9 +1,0 @@
-#+TITLE: Anonymous Functions
-* Anonymous Functions
-** What is anonymous function?
-Anonymous functions are like regular functions, but without a name.
-
-** Anything special?
-*** Can declare the return type, while lambda can't.
-*** parameters are always passed inside the parentheses. If the last parameter of a function is an anonymous function, the anonymous function cannot go outside the parentheses (this works only for lambdas)!
-*** Unqualified return will return from the anonymous function itself.
