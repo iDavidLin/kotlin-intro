@@ -1,0 +1,76 @@
+#+TITLE: Local Functions
+* Local Functions
+** What is local function?
+A local function is a function within a function. Yes you heard that right. It is a function scoped within another function. It is another way to achieve code reuse.
+** Why local function?
+Reusable sequences of code are often times extracted to another function to achieve reusability. However, this approach could easily end you up with a class littered with small functions with no clear relationship between each other. Grouping these functions could also net you a lot of boilerplate code. Wouldn’t it be nice to extract these functions and scope them to the function that requires them to make relationships clear without any boilerplate code?
+
+** How to create a local function?
+
+Simple as declaring a variable, creating a local function just same as other function you create with a keyword =fun=.
+#+begin_src kotlin
+fun login(username: String, password: String) : Boolean {
+    var something = 1
+    fun validateInput(input: String){
+        something++
+        if (input.isEmpty()) {
+            throw IllegalArgumentException("Must not be empty")
+        }
+    }
+    validateInput(username)
+    validateInput(password)
+    return true
+}
+#+end_src
+
+Local functions same as variable, have to be declared first before hey are referenced. Local function can access variables local to the function or outside the function.
+#+begin_src kotlin
+fun foo(fooParam: String) {
+
+    val outerFunction = "Value"
+
+    fun bar(barParam: String) {
+        val localVariable = "local variable"
+        println(localVariable)
+        println(barParam)
+        println(fooParam)
+        println(outerFunction)
+    }
+}
+#+end_src
+
+** Local functions under the hood
+If we decompile the first function above. This is what we got
+#+begin_src kotlin
+   public static final boolean login(@NotNull String username, @NotNull String password) {
+      Intrinsics.checkNotNullParameter(username, "username");
+      Intrinsics.checkNotNullParameter(password, "password");
+      final IntRef something = new IntRef();
+      something.element = 1;
+      <undefinedtype> $fun$validateInput$1 = new Function1() {
+         // $FF: synthetic method
+         // $FF: bridge method
+         public Object invoke(Object var1) {
+            this.invoke((String)var1);
+            return Unit.INSTANCE;
+         }
+
+         public final void invoke(@NotNull String input) {
+            Intrinsics.checkNotNullParameter(input, "input");
+            int var10001 = something.element++;
+            CharSequence var2 = (CharSequence)input;
+            boolean var3 = false;
+            if (var2.length() == 0) {
+               throw (Throwable)(new IllegalArgumentException("Must not be empty"));
+            }
+         }
+      };
+      $fun$validateInput$1.invoke(username);
+      $fun$validateInput$1.invoke(password);
+      return true;
+   }
+#+end_src
+
+The local variables are converted to a Ref type available in the kotlin JVM. This allows you to somehow pass (or access) by reference. This feature is called capturing. It allows you to modify non-final variables by wrapping it in a reference. Let’s take a look at where the magic happens.
+
+The local function is represented as a Function object and is called via a method invoke. If you are familiar with functional interfaces, higher-order functions and lambda expressions, then you can say that this is the pre-Java 8 way of achieving those.
