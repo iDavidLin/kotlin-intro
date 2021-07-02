@@ -1,0 +1,80 @@
+#+TITLE: Returns And Local Returns
+
+* Returns
+Guess what you get when you run the function below?
+#+begin_src kotlin
+fun containingFunction() {
+    val numbers = 1..100
+    numbers.forEach{
+        if (it % 5 == 0) {
+            return
+        }
+    }
+    println("Hello!")
+}
+#+end_src
+
+Yes, you wouldn't get anything, the =println= would be excuse.
+
+Becaues, the code run inside the /forEach/ is a lambda. And *return inside an lambda expression will return from the enclosing function*. So it will never excute the =printlin("Hello")=.
+
+What if we want to print the hello?
+
+* Local Returns
+If you want to make the above function print the hello. There are certain ways you can make it work.
+
+** Label
+#+begin_src kotlin
+fun containingFunction() {
+    val numbers = 1..100
+    numbers.forEach{
+        if (it % 5 == 0) {
+            return@forEach
+        }
+    }
+    println("Hello!")
+}
+
+fun containingFunction() {
+    val numbers = 1..100
+    numbers.forEach myLabel@{
+        if (it % 5 == 0) {
+            return@myLabel
+        }
+    }
+    println("Hello!")
+}
+#+end_src
+
+
+** Anonymous function
+As we mentioned previous in the anonymous chapter, anonymous support unqualified return to exit form a function.
+#+begin_src kotlin
+fun containingFunction() {
+    val numbers = 1..100
+    numbers.forEach (fun(element) {
+        if (element % 5 == 0) {
+            return
+        }
+    })
+    println("Hello!")
+}
+#+end_src
+
+** Inline function
+As what we learn in the inline function chapter, if we want to use return inside a lambda expression, we can make it a inline function.
+#+begin_src kotlin
+inline fun <T> Iterable<T>.myForEach(action: (T) -> Unit): Unit {
+    for (element in this) action(element)
+}
+
+fun containingFunction() {
+    val numbers = 1..100
+    numbers.myForEach{
+        if (it % 5 == 0) {
+            return
+        }
+    }
+    println("Hello!")
+}
+#+end_src
