@@ -1,0 +1,11 @@
+#+TITLE: Functions
+
+* Functions
+** Local Functions
+** Anonymous Functions
+** Returns and Local Returns
+** Tail Recursion
+** Operator Overloading
+** Lambda Extensions
+** Invoking Instances
+** Functional Constructes
