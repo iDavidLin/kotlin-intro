@@ -1,5 +1,5 @@
 #+TITLE: Local Functions
-* Local Functions
+
 ** What is local function?
 A local function is a function within a function. Yes you heard that right. It is a function scoped within another function. It is another way to achieve code reuse.
 ** Why local function?
