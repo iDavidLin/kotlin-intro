@@ -1,5 +1,5 @@
 #+TITLE: Anonymous Functions
-* Anonymous Functions
+
 ** What is anonymous function?
 Anonymous functions are like regular functions, but without a name.
 
