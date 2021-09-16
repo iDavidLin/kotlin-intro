@@ -1,0 +1,82 @@
+* inline function
+** What is inline function?
+Instead of calling the function, inline function means (the compile) will inlines the function body. That is, it substitutes the body directly into places where the function gets called. By default, the compile inlines the code for both the function itself and the lambdas passed to it.
+** Why we need inline function?
+*** The overhead of Lambdas in Kotlin
+One of the perks of functions being first-class citizens in Kotlin is that we can pass a piece of behavior to other functions. Passing functions as lambdas let us express our intentions in a more concise and elegant way but that’s only one part of the story.
+
+When compile a Kotlin function which has a higher-order-function passing in as a parameters into Java, because Kotlin goes for Java 6 compatibility which not support invoke dynamic, at least one instance of those special /Function/ types will be created.
+
+In order to actually performa the operation encapsulated in a Kotlin lambda, the higher-order-function will need to call the special method named /invoke/ on the new instance. The result is more overhead due to the extra call.
+
+So, when we're passing a lambda to a function, the following happends uder the hood:
+1. At least one instance of a special type is created and stored in the heap
+2. An extra method call will always happen
+
+*** Closures
+As we saw earlier, when we pass a lambda to a function, an instance of a function type will be created, similar to anonymous inner classes in Java.
+
+Just like with the latter, a lambda expression can access its closure, that is, variables declared in the outer scope. When a lambda captures a variable from its closure, Kotlin stores the variable along with the capturing lambda code.
+
+The extra memory allocations get even worse when a lambda captures a variable: The JVM creates a function type instance on every invocation. For non-capturing lambdas, there will be only one instance, a singleton, of those function types.
+
+*** Type Erasure
+JVM will erases the generic type information at runtime. That is, an instance of a generic class doesn’t preserve its type parameters at runtime.
+
+For example, when declaring a few collections like List<Int> or List<String>, all we have at runtime are just raw Lists. This seems unrelated to the previous issues, as promised, but we’ll see how inline functions are the common solution for both problems.
+** Inline Functions
+*** Removing the Overhead of Lambdas
+When using lambdas, the extra memory allocations and extra virtual method call introduce some runtime overhead. So, if we were executing the same code directly, instead of using lambdas, our implementation would be more efficient.
+
+Do we have to choose between abstraction and efficiency?
+
+As is turns out, with inline functions in Kotlin we can have both! We can write our nice and elegant lambdas, and the compiler generates the inlined and direct code for us. All we have to do is to put an inline on it:
+#+begin_src kotlin
+inline fun <T> Collection<T>.each(block: (T) -> Unit) {
+    for (e in this) block(e)
+}
+#+end_src
+
+When using inline functions, the compiler inlines the function body. That is, it substitutes the body directly into places where the function gets called.  By default, the compiler inlines the code for both the function itself and the lambdas passed to it.
+
+For example, The compiler translates:
+#+begin_src kotlin
+val numbers = listOf(1, 2, 3, 4, 5)
+numbers.each { println(it) }
+#+end_src
+
+To something like:
+#+begin_src kotlin
+val numbers = listOf(1, 2, 3, 4, 5)
+for (number in numbers)
+    println(number)
+#+end_src
+
+When using inline functions, there is no extra object allocation and no extra virtual method calls.
+
+However, we should not overuse the inline functions, especially for *long functions* since the inlining may cause the generated code to grow quite a bit.
+
+*** No Inline
+By default, all lambdas passed to an inline function would be inlined, too. However, we can mark some of the lambdas with the noinline keyword to exclude them from inlining:
+
+#+begin_src kotlin
+inline fun foo(inlined: () -> Unit, noinline notInlined: () -> Unit) { ... }
+#+end_src
+*** Inline Reification
+As we saw earlier, Kotlin erases the generic type information at runtime, but for inline functions, we can avoid this limitation. That is, the compiler can reify generic type information for inline functions.
+
+All we have to do is to mark the type parameter with the reified keyword:
+
+#+begin_src kotlin
+inline fun <reified T> Any.isA(): Boolean = this is T
+#+end_src
+*** Non-Local Returns
+In Kotlin, we can use the return expression (also known as unqualified return) only to exit from a named function or an anonymous one. However, we can't use unqualified return expressions to exit from a lambda expression.
+
+But as a workaround for this limitation, is to inline the lambda function.
+Inline functions are merely artifacts of the source code and don’t manifest themselves at runtime. Therefore, returning from an inlined lambda is equivalent to returning from the enclosing function.
+
+*** Limitations
+**** We can inline functions with lambda parameters only if the lambda is either called directly or passed to another inline function
+Otherwise, the compile prevents inlining with a compiler error.
+**** Small function
