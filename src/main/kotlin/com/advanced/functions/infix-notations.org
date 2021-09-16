@@ -1,0 +1,76 @@
+# Infix Notation
+
+* Infix Notation
+Ever imagined calling a public function of a class without dot and parentheses of the parameter in Kotlin. Kotlin provides infix notation with which we can call a function with the class object without using a dot and parentheses across the parameter.
+
+Using infix function provides more readability to a function similar to other operators like in, is, as in Kotlin.
+
+** Example: mao definition
+#+begin_src kotlin
+map(
+    1 to "one",
+    2 to "two",
+    3 to "three"
+)
+#+end_src
+
+** Other functions
+Apart from the =to()= function that used to create /Pair<A,B>/ instances, there are some other functions that are defined as /infix/.
+
+For exmple, the various numeric classes - /Byte/, /Short/, /Int/, and /Long/ - all define the bitwise functions /and()/, /or()/, /shl()/, /ushr()/, and /xor()/, allowing some more readable expressions:
+#+begin_src kotlin
+val color = 0x123456
+val red = (color and 0xff000) shr 16
+val greed = (color and 0x00ff00) shr 8
+val blue = (color and 0x00ff00) shr 0
+#+end_src
+
+The Boolean class defines the /and()/, /or()/ and /xor()/ logical functions in a similar way:
+#+begin_src kotlin
+if((user.isActived and user.isEligible) or user.isAdmin) {
+    ...
+}
+#+end_src
+
+The String class also defines the match and zip functions as infix, allowing some simple-to-read code:
+
+#+begin_src kotlin
+"Hello, World" matches "^Hello".toRegex()
+#+end_src
+
+There are some other examples that can be found throughout the standard library, but these are possibly the most common.
+
+** Write custom infix methods
+Often, we’re going to want to write our own infix methods. These can be especially useful, for example, when writing a Domain Specific Language for our application, allowing the DSL code to be much more readable.
+
+Writing an infix function is a simple case of following three rules:
+1. The function is either defined on a class or is an extension method for a class
+2. The function takes exactly one parameter
+3. The function is defined using the infix keyword
+
+Example: function define on a class
+#+begin_src kotlin
+class Assertion<T>(private val target: T) {
+    infix fun isEqualTo(other: T) {
+        Assert.assertEquals(other, target)
+    }
+
+    infix fun isDifferentFrom(other: T) {
+        Assert.assertNotEquals(other, target)
+    }
+}
+
+
+val result = Assertion(5)
+
+result isEqualTo 5 // This passes
+result isEqualTo 6 // This fails the assertion
+result isDifferentFrom 5 // This also fails the assertion
+
+#+end_src
+
+Example: function as extension methods to existing classes
+#+begin_src kotlin
+infix fun String.shouldBeEqualTo(value: String) = this == value
+#+end_src
+This can be powerful, as it allows us to augment existing classes from elsewhere — including the standard library — to fit our needs.
