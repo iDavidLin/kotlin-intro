@@ -1,0 +1,16 @@
+#+TITLE: Invoking Instances
+
+* Invoking Instances
+Objects with invoke() method can be invoked as a function.
+
+You can add invoke extension for any class
+#+begin_src kotlin
+class Manager {
+    operator fun invoke(value: String) {
+        //...do something
+    }
+}
+
+val manager = Manger()
+manager("Have a good day")
+#+end_src
