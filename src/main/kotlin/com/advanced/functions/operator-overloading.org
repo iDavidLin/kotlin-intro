@@ -1,0 +1,146 @@
+#+TITLE: Operator Overloading
+* Operator Overloading
+** What is operator overloading?
+Since Kotlin provides user-defined types, it also provides the additional functionality to overload the standard operators, so that working with user-defined types is easier. All of the unary, binary, relational operators can be overloaded. The operators are overloaded either through the *member functions* or through *extension functions*. These functions are preceded by the operator modifier. There are standard functions for every type of operator that can be overloaded according to the usage.
+
+When you use operator in Kotlin, it's corresponding member function is called. For example, expression =a+b= transforms to =a.plus(b)= under the hood.
+#+begin_src kotlin
+val a = 5
+val b = 6
+println(a + b) // println(a.plus(b))
+#+end_src
+
+** The /operator/ Keyword
+In order to turn a Kotlin function with a pre-defined name into an operator, we just need to add the /operator/ modifier.
+#+begin_src kotlin
+data class Point(val x: Int, val y: Int)
+
+operator fun Point.plus(other: Point) = Point(x + other.x, y + other.y)
+#+end_src
+
+** Overloading operator
+The above code is an example of overloading an unary operation plus. We can overload a minus or unary minus.
+#+begin_src kotlin
+operator fun Point.minus(other: Point) = Point(x - other.x, y - other.y)
+operator fun Point.unaryMinus() = Point(-x, -y)
+#+end_src
+
+other example
+*** Unary Operations
+**** Increment
+#+begin_src kotlin
+operator fun Point.inc() = Point(x + 1, y + 1)
+var p = Point(2, 2)
+println(p++) //Point(3, 3)
+#+end_src
+
+**** Decrement
+#+begin_src kotlin
+operator fun Point.dec() = Point(x - 1, y - 1)
+var p = Point(2, 2)
+println(p--) //Point(1, 1)
+#+end_src
+
+**** Not
+If we want to flipping the coordinates jut by /!p/? We can do this with /not/:
+#+begin_src kotlin
+operator fun Point.not() = Point(y, x)
+val p = Point(3, 6)
+println(!p) // Point(6, 3)
+#+end_src
+
+*** Binary Operations
+**** Arithmetic Operators
+#+begin_src kotlin
+operator fun Point.plus(other: Point): Point = Point(x + other.x, y + other.y)
+operator fun Point.minus(other: Point): Point = Point(x - other.x, y - other.y)
+operator fun Point.times(other: Point): Point = Point(x * other.x, y * other.y)
+operator fun Point.div(other: Point): Point = Point(x / other.x, y / other.y)
+operator fun Point.rem(other: Point): Point = Point(x % other.x, y % other.y)
+#+end_src
+
+**** Commutativity
+Overloaded operators are not always commutative. That is, we can’t swap the operands and expect things to work as smoothly as possible.
+
+For example, we can scale a Point by an integral factor by multiplying it to an Int, say “p1 * 2”, but not the other way around.
+
+The good news is, we can define operator functions on Kotlin or Java built-in types. In order to make the “2 * p1” work, we can define an operator on Int:
+#+begin_src kotlin
+operator fun Int.times(point: Point): Point = Point(point.x * this, point.y * this)
+
+val p = Point(2, 3)
+println(2 * p) // Point(4, 6)
+#+end_src
+
+**** Compound Assignments
+By default, when we implement one of the arithmetic operators, say “plus”, Kotlin not only supports the familiar “+” operator, it also does the same thing for the corresponding compound assignment, which is “+=”.
+
+This means, without any more work, we can also do:
+#+begin_src kotlin
+var p = Point(1, 1)
+p += Point(2, 2)
+p -= Point(1, 2)
+p *= Point(2, 2)
+p /= Point(1, 2)
+p *= 4
+#+end_src
+
+But sometimes this default behavior is not what we’re looking for. Suppose we’re going to use “+=” to add an element to a MutableCollection.
+
+For these scenarios, we can be explicit about it by implementing an operator function named plusAssign:
+
+#+begin_src kotlin
+operator fun <T> MutableCollection<T>.plusAssign(element: T) {
+    add(element)
+}
+#+end_src
+
+For each arithmetic operator, there is a corresponding compound assignment operator which all have the /“Assign”/ suffix. That is, there are plusAssign, minusAssign, timesAssign, divAssign, and remAssign.
+
+**** Equals Convention
+
+If we override the equals method, then we can use the “==” and “!=” operators, too.
+#+begin_src kotlin
+data class Point(val x: Int, val y: Int) {
+    override fun equals(other: Point): Boolean {
+        return x == other.x && y == other.y
+    }
+}
+#+end_src
+
+Kotlin translates any call to “==” and “!=” operators to an equals function call, obviously in order to make the “!=” work, the result of the function call gets inverted. Note that in this case, we don’t need the operator keyword.
+
+**** Comparison Operators
+**** In Convention
+In order to check if an element belongs to a Page, we can use the “in” convention:
+#+begin_src kotlin
+operator fun <T> Page<T>.contains(element: T): Boolean = element in elements()
+#+end_src
+
+Again, the compiler would translate “in” and “!in” conventions to a function call to the contains operator function.
+
+**** Get Indexer / Set Indexer
+
+**** Invoke
+In Kotlin and many other programming languages, it’s possible to invoke a function with functionName(args) syntax. It’s also possible to mimic the function call syntax with the invoke operator functions. For example, in order to use page(0) instead of page[0] to access the first element, we can declare an extension:
+
+#+begin_src kotlin
+interface Page<T> {
+    fun pageNumber(): Int
+    fun pageSize(): Int
+    fun elements(): MutableList<T>
+}
+operator fun <T> Page<T>.invoke(index: Int): T = elements()[index]
+#+end_src
+
+Kotlin translates the parentheses to a call to the invoke method with an appropriate number of arguments. Moreover, we can declare the invoke operator with any number of arguments.
+
+**** Iterator Convention
+**** Range Convention
+
+** Summary
+Operator overloading is a powerful feature in Kotlin which enables us to write more concise and sometimes more readable codes. However, with great power comes great responsibility.
+
+Operator overloading can make our code confusing or even hard to read when it’s too frequently used or occasionally misused.
+
+Thus, before adding a new operator to a particular type, first, ask whether the operator is semantically a good fit for what we’re trying to achieve. Or ask if we can achieve the same effect with normal and less magical abstractions.
